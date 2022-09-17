@@ -5,6 +5,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 public class Solution {
 	
@@ -26,41 +29,52 @@ public class Solution {
 //		}
 		
 		
-		
-		for(int i =3; i < 51; ++i) {
-			boolean[][] mx = prepareTask(i, 2, 1);
-			System.out.printf("Testing mx[%d][%d] = %d\n", mx.length, mx[0].length, solution(mx));
+		int max = 0;
+		for(int cols =3; cols < 51; ++cols) {
+			for (int rows = 3; rows < 10 && rows + cols < 60; rows++) {
+				
+				System.out.println();
+				boolean[][] mx = generateTask(rows, cols, row -> row % 2, (row, col) -> (row + col) % 2, 0.1);
+				
+				res = solution(mx);
+				System.out.printf("Testing mx[%d][%d] = %d\n", mx.length, mx[0].length, res);
+				
+				max = Math.max(max, res);
+			}
+			
 		} 
 		
+		System.out.println("MAX = " + max);
 		
+
 	}
 
 	
 	
 	
-	private static boolean[][] prepareTask(int i, int skip, int set) {
-		int rows = Math.min(i, 9);
-		int cols = i;
+	
+	
+	private static boolean[][] generateTask(int rows, int cols,  Function<Integer, Integer> rowStart, BiFunction<Integer, Integer, Integer> next, double incOrDec) {
+
+		Random rand = new Random();
 		
 		boolean[][] mx = new boolean[rows][cols];
 		
-		int setting = set;
-		int skipping = 0;
 		
 		for (int r = 0; r < rows; r++) {
 			boolean[] row = mx[r];
 			
+			int first = rowStart.apply(r);
 			
-			for (int j = 0; j < row.length; j++) {
-				if (setting > 0) {
-					row[j] = true;
-					if (--setting == 0)
-						skipping = skip;
-				}
-				else {
-					if (--skipping == 0)
-						setting = set;
-				}
+			row[first] = true;
+			
+			for (int c = first + 1; c < row.length; c++) {
+				boolean b = next.apply(r, c) != 0;
+				
+				if (b) {
+					row[c] = rand.nextDouble() > incOrDec;
+				}			
+				
 				
 				
 			}
@@ -74,9 +88,26 @@ public class Solution {
 
 
 	public static int solution(boolean[][] state) {
+		printState(state);
+		
 		return new Solution().solve(state);
 	}
 	
+	private static void printState(boolean[][] state) {
+		System.out.printf(" ***************************** State %d x % d\n\n", state.length, state[0].length);
+
+		for (int r  = 0; r < state.length; r++) {
+			
+			for (int c = 0; c < state[0].length; c++) {
+				System.out.print(state[r][c] ? "o" : ".");
+			}
+			
+			System.out.println();
+			
+		}
+		
+	}
+
 	int rows, cols;
 	boolean[][] state;
 	int[] icols;   // contains int values of column bits
